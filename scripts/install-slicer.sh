@@ -3,30 +3,8 @@ set -euo pipefail
 
 echo "=== Installing PrusaSlicer (arm64) ==="
 
-# Default to AppImage (headless)
-METHOD="${1:-appimage}"
-
-install_appimage() {
-    echo ""
-    echo "Downloading PrusaSlicer 2.6.0 arm64 AppImage..."
-    echo "Note: 2.6.0 is the last version with official arm64 AppImage builds."
-
-    # PrusaSlicer 2.6.0 arm64 AppImage
-    SLICER_URL="https://github.com/prusa3d/PrusaSlicer/releases/download/v2.6.0/prusa-slicer-2.6.0-Dev-g561599d9e-linux-gtk2-armv7a.AppImage"
-    SLICER_PATH="/usr/local/bin/prusa-slicer"
-
-    # Alternative URL if the Dev build doesn't work (release version)
-    ALT_URL="https://github.com/prusa3d/PrusaSlicer/releases/download/v2.6.0/prusa-slicer-2.6.0-linux-gtk2-armv7a.AppImage"
-
-    # Try main URL first, fall back to alternative
-    if ! curl -L -f -o "$SLICER_PATH" "$SLICER_URL" 2>/dev/null; then
-        echo "Primary URL failed, trying alternative..."
-        curl -L -f -o "$SLICER_PATH" "$ALT_URL"
-    fi
-
-    chmod +x "$SLICER_PATH"
-    echo "Installed to: $SLICER_PATH"
-}
+# Default to Flatpak (official, latest version)
+METHOD="${1:-flatpak}"
 
 install_flatpak() {
     echo ""
@@ -40,39 +18,74 @@ install_flatpak() {
     fi
 
     # Add Flathub remote
-    if ! flatpak remote-list | grep -q flathub; then
+    if ! flatpak remote-list 2>/dev/null | grep -q flathub; then
         flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
     fi
 
     # Install PrusaSlicer
     flatpak install flathub com.prusa3d.PrusaSlicer -y
 
-    # The CLI binary is inside the flatpak sandbox
-    # We can call it via flatpak run
-    echo "Installed PrusaSlicer via Flatpak"
-    echo "Update config.yaml slicer_binary to use: flatpak run com.prusa3d.PrusaSlicer"
+    echo ""
+    echo "Installed PrusaSlicer via Flatpak (version available in sandbox)"
+    echo ""
+    echo "To use from CLI, update config.yaml slicer_binary to:"
+    echo "  slicer_binary: \"flatpak run com.prusa3d.PrusaSlicer\""
+    echo "  # or use the bundled binary:"
+    echo "  slicer_binary: \"$(flatpak list 2>/dev/null | grep PrusaSlicer | awk '{print $5}')\""
+}
+
+install_appimage() {
+    echo ""
+    echo "Downloading PrusaSlicer arm64 AppImage (community build by davidk)..."
+
+    SLICER_PATH="/usr/local/bin/prusa-slicer"
+
+    # Use davidk's community ARM AppImage (PrusaSlicer 2.8.1, arm64)
+    # This is the last community-maintained arm64 AppImage
+    SLICER_URL="https://github.com/davidk/PrusaSlicer-ARM.AppImage/releases/download/version_2.8.1/PrusaSlicer-version_2.8.1-aarch64.AppImage"
+
+    echo "URL: $SLICER_URL"
+    echo ""
+
+    # Download
+    if ! curl -L -f -o "$SLICER_PATH" "$SLICER_URL"; then
+        echo "Download failed. Trying mirror URL..."
+        curl -L -f -o "$SLICER_PATH" "https://github.com/davidk/PrusaSlicer-ARM.AppImage/releases/download/version_2.8.1/PrusaSlicer-version_2.8.1-aarch64.AppImage"
+    fi
+
+    chmod +x "$SLICER_PATH"
+
+    # Check size - AppImage should be ~200MB+
+    SIZE=$(stat -c%s "$SLICER_PATH" 2>/dev/null || echo "0")
+    SIZE_MB=$((SIZE / 1048576))
+    echo "Downloaded to: $SLICER_PATH ($SIZE_MB MB)"
+
+    if [ "$SIZE_MB" -lt 50 ]; then
+        echo ""
+        echo "WARNING: Download seems too small - may have failed."
+        echo "Try using flatpak instead: $0 flatpak"
+        exit 1
+    fi
+
+    echo ""
+    echo "Installed to: $SLICER_PATH"
+    echo ""
+    echo "Next steps:"
+    echo "  Update config.yaml slicer_binary: /usr/local/bin/prusa-slicer"
 }
 
 case "$METHOD" in
-    appimage)
-        install_appimage
-        ;;
     flatpak)
         install_flatpak
+        ;;
+    appimage)
+        install_appimage
         ;;
     *)
         echo "Usage: $0 [appimage|flatpak]"
         echo ""
-        echo "  appimage  - Standalone binary, works headless (recommended for BTT Pi)"
-        echo "  flatpak   - Flatpak package, requires desktop environment"
+        echo "  flatpak   - Official PrusaSlicer 2.9.7 via Flatpak (recommended)"
+        echo "  appimage  - Community PrusaSlicer 2.8.1 AppImage (lighter, no GUI needed)"
         exit 1
         ;;
 esac
-
-echo ""
-echo "=== PrusaSlicer installation complete ==="
-echo ""
-echo "Next steps:"
-echo "  1. Verify the binary works (may need dependencies for headless use)"
-echo "  2. Update config.yaml slicer_binary path"
-echo "  3. Run: ./$0 to install the Python service"
