@@ -1,17 +1,34 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "=== Installing OrcaSlicer (arm64) ==="
+echo "=== Installing OrcaSlicer ==="
 
 # Default to AppImage (lightweight, no GUI needed)
 METHOD="${1:-appimage}"
 
 install_appimage() {
     echo ""
-    echo "Downloading OrcaSlicer v2.5.0 arm64 AppImage (official)..."
+    echo "Detecting system architecture..."
 
+    # Detect architecture and set appropriate URL
     SLICER_PATH="/usr/local/bin/orca-slicer"
-    SLICER_URL="https://github.com/OrcaSlicer/OrcaSlicer/releases/download/v2.5.0/OrcaSlicer_Linux_AppImage_Ubuntu2404_aarch64_V2.5.0.AppImage"
+    ARCH=$(uname -m)
+
+    case "$ARCH" in
+        aarch64|arm64)
+            echo "  Architecture: $ARCH (arm64)"
+            SLICER_URL="https://github.com/OrcaSlicer/OrcaSlicer/releases/download/v2.5.0/OrcaSlicer_Linux_AppImage_Ubuntu2404_aarch64_V2.5.0.AppImage"
+            ;;
+        x86_64)
+            echo "  Architecture: $ARCH (x86_64)"
+            SLICER_URL="https://github.com/OrcaSlicer/OrcaSlicer/releases/download/v2.5.0/OrcaSlicer_Linux_AppImage_Ubuntu2404_x86_64_V2.5.0.AppImage"
+            ;;
+        *)
+            echo "ERROR: Unsupported architecture: $ARCH"
+            echo "Supported: aarch64/arm64, x86_64"
+            exit 1
+            ;;
+    esac
 
     echo "URL: $SLICER_URL"
     echo ""
