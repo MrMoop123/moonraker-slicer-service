@@ -5,8 +5,8 @@ host: "0.0.0.0"
 port: 7125
 
 # Slicer binary path and name
-slicer_binary: "/usr/local/bin/prusa-slicer"
-slicer_name: "prusa-slicer"
+slicer_binary: "/usr/local/bin/orca-slicer"
+slicer_name: "orca-slicer"
 
 # Directories
 profiles_dir: "~/.config/moonraker-slicer/profiles"
