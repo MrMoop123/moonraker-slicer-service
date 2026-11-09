@@ -1,13 +1,12 @@
 """Entry point for the Moonraker Slicing Service."""
 
-import asyncio
 import logging
-import signal
 import sys
 from pathlib import Path
 
 import click
 import yaml
+import uvicorn
 
 from moonraker_slicer.server import create_app
 
@@ -73,38 +72,12 @@ def main(config_path: str | None, host: str | None, port: int | None, log_level:
 
     app = create_app(config)
 
-    # Handle graceful shutdown
-    loop = asyncio.new_event_loop()
-
-    def shutdown(sig: int) -> None:
-        logger.info("Received signal %d, shutting down...", sig)
-        server.should_exit = True
-        loop.call_soon(loop.stop)
-
-    for sig in (signal.SIGINT, signal.SIGTERM):
-        try:
-            loop.add_signal_handler(sig, lambda s=sig: shutdown(s))
-        except NotImplementedError:
-            pass
-
-    # Start uvicorn in a thread
-    import uvicorn
-    config_obj = uvicorn.Config(
+    uvicorn.run(
         app,
         host=config.get("host", "0.0.0.0"),
         port=config.get("port", 7125),
-        log_level=config.get("log_level", "info").lower(),
+        log_level=config.get("log_level", "info"),
     )
-    server = uvicorn.Server(config_obj)
-
-    logger.info("Starting Moonraker Slicing Service on %s:%d", config.get("host", "0.0.0.0"), config.get("port", 7125))
-
-    try:
-        loop.run_until_complete(server.serve())
-    except KeyboardInterrupt:
-        pass
-    finally:
-        logger.info("Service stopped.")
 
 
 if __name__ == "__main__":
