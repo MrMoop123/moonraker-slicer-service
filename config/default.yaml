@@ -10,7 +10,7 @@ slicer_name: "orca-slicer"
 
 # Directories
 profiles_dir: "~/.config/moonraker-slicer/profiles"
-output_dir: "/home/pi/gcode_files"
+output_dir: "~/gcode_files"
 
 # Job limits
 max_concurrent_jobs: 2

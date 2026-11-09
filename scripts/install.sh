@@ -32,7 +32,7 @@ else
 fi
 
 # Create output directory
-OUTPUT_DIR="${OUTPUT_DIR:-/home/pi/gcode_files}"
+OUTPUT_DIR="${OUTPUT_DIR:-$HOME/gcode_files}"
 mkdir -p "$OUTPUT_DIR"
 echo "Output directory: $OUTPUT_DIR"
 
@@ -43,7 +43,7 @@ echo "Config location: $CONFIG_DIR/config.yaml"
 echo "Output directory: $OUTPUT_DIR"
 echo ""
 echo "Next steps:"
-echo "  1. Install PrusaSlicer:   ./scripts/install-slicer.sh"
+echo "  1. Install OrcaSlicer:    ./scripts/install-slicer.sh"
 echo "  2. Edit config:           nano $CONFIG_DIR/config.yaml"
 echo "  3. Start the service:     $VENV/bin/python -m moonraker_slicer"
 echo "  4. Or install as systemd: ./scripts/systemd-setup.sh"
