@@ -16,27 +16,32 @@ install_appimage() {
     echo "URL: $SLICER_URL"
     echo ""
 
-    # Download
-    curl -L -f -o "$SLICER_PATH" "$SLICER_URL"
-
-    chmod +x "$SLICER_PATH"
+    # Download to temp dir first (no sudo needed)
+    TMP_FILE=$(mktemp /tmp/orca-slicer-XXXXXX.AppImage)
+    curl -L -f -o "$TMP_FILE" "$SLICER_URL"
 
     # Check size - AppImage should be ~200MB+
-    SIZE=$(stat -c%s "$SLICER_PATH" 2>/dev/null || echo "0")
+    SIZE=$(stat -c%s "$TMP_FILE" 2>/dev/null || echo "0")
     SIZE_MB=$((SIZE / 1048576))
-    echo "Downloaded to: $SLICER_PATH ($SIZE_MB MB)"
 
     if [ "$SIZE_MB" -lt 50 ]; then
-        echo ""
-        echo "WARNING: Download seems too small - may have failed."
+        echo "WARNING: Download seems too small ($SIZE_MB MB) - may have failed."
+        rm -f "$TMP_FILE"
         exit 1
     fi
 
+    echo "Downloaded ($SIZE_MB MB). Installing to $SLICER_PATH ..."
+
+    # Move with sudo to system path
+    sudo mv "$TMP_FILE" "$SLICER_PATH"
+    sudo chmod +x "$SLICER_PATH"
+
     echo ""
-    echo "Installed to: $SLICER_PATH"
+    echo "Installed to: $SLICER_PATH ($SIZE_MB MB)"
     echo ""
     echo "Next steps:"
-    echo "  Update config.yaml slicer_binary: /usr/local/bin/orca-slicer"
+    echo "  Install the service:   ./scripts/install.sh"
+    echo "  Verify config.yaml shows: slicer_binary: /usr/local/bin/orca-slicer"
 }
 
 install_flatpak() {
