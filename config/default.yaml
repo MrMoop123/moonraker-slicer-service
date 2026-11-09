@@ -1,0 +1,26 @@
+# Moonraker Slicing Service Configuration
+
+# Network settings
+host: "0.0.0.0"
+port: 7125
+
+# Slicer binary path and name
+slicer_binary: "/usr/local/bin/prusa-slicer"
+slicer_name: "prusa-slicer"
+
+# Directories
+profiles_dir: "~/.config/moonraker-slicer/profiles"
+output_dir: "/home/pi/gcode_files"
+
+# Job limits
+max_concurrent_jobs: 2
+max_model_size_mb: 500
+
+# Security
+bind_address: "0.0.0.0"
+
+# Cleanup
+job_retention_days: 30
+
+# Logging
+log_level: "INFO"
