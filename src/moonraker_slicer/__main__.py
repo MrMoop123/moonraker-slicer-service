@@ -78,7 +78,7 @@ def main(config_path: str | None, host: str | None, port: int | None, log_level:
 
     def shutdown(sig: int) -> None:
         logger.info("Received signal %d, shutting down...", sig)
-        asyncio.create_task(app.shutdown())
+        server.should_exit = True
         loop.call_soon(loop.stop)
 
     for sig in (signal.SIGINT, signal.SIGTERM):
